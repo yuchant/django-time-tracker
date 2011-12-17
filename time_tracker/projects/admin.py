@@ -47,6 +47,7 @@ class InvoiceAdmin(admin.ModelAdmin):
 
 
     def render_invoice(self, request, pk):
+        print request.POST
         ctx = {}
         invoice = Invoice.objects.select_related('project', 'hours').get(pk=pk)
         ctx['invoice'] = invoice

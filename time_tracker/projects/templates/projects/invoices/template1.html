@@ -1,39 +1,149 @@
 <html>
 <head>
+<link href='http://fonts.googleapis.com/css?family=Nixie+One|Yanone+Kaffeesatz|Raleway:100' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'>
+
+<link href='http://fonts.googleapis.com/css?family=Questrial|Linden+Hill|Quattrocento|Mate+SC|Josefin+Slab:400,700|Lato|Quicksand' rel='stylesheet' type='text/css'>
+<title>Invoice for {{ project.name }} #{{ invoice.id }}</title>
 
 <style>
-	body {
-		font-size:1em;
+	body, html {
+		font-size:.9em;
+		font-family: sans-serif;
+		text-align:center;
+		padding:0px;
+		margin:0px;
+		padding:10px;
+
 	}
-	#address_row {
-		
+	.color {
+		color: #00a8ff;
 	}
+
+	h1, h2, h3, h4 {
+		font-family: 'Questrial', sans-serif;
+		font-weight:700;
+		font-weight:normal;
+		color:#00a8ff;
+	}
+	#invoice_id {
+		font-size:4em;
+		color:#00a8ff;
+	}
+	h1 {
+		font-size:2.8em;
+	}
+	h2 {
+		font-size:2em;
+	}
+	.section {
+		margin-bottom:35px;
+	}
+
+	.invoice_hours {
+		font-size:.75em;
+		margin-bottom:15px;
+	}
+	.invoice_hours .time { color:#666;}
+	.invoice_hours .hours { color:#666; font-weight:bold;}
+	.invoice_hours .comment { font-style:italic; margin-top:3px;}
 </style>
 </head>
 <body>
+<div id="content">
+	<div class="section">
+		<h1>[ Invoice for {{ project.name }} #{{ invoice.id }} ]</h1>
+		<div id="invoice_id"></div>
 
-
-
-<div id="address_row">
-	<div class="address">
-		<h3>Client Information</h3>
-		{{ invoice.billing_address }}
+		<p>
+			{{ invoice.comment }}
+		</p>
 	</div>
 
-	<div class="address">
-		<h3>Make Payments To</h3>
-		{{ invoice.shipping_address }}
 
+	<div class="section">
+		<h2>[ Prepared on {{ invoice.date_created|date:"b.d.y" }} for {{ project.name }}]</h2>
+		<div class="project_name">
+			{{ project.name }}
+		</div>
+		{% with invoice.billing_address as address %}
+		<div class="name">
+			{{ address.name }}
+		</div>
+		<div class="company">
+			{{ address.company }}
+		</div>
+		<div class="addr">
+		{{ address.street1 }} <br>
+
+		{% if address.street2 %}{{ address.street2 }}<br>{% endif %}
+
+		{% if address.city %}{{ address.city }},{% endif %}
+		{% if address.province %}{{ address.province }},{% endif %}{% if address.postal_code %}{{ address.postal_code }}{% endif %}<br>
+
+
+		</div>
+		<div class="contact">
+			{% if address.phone %}{{ address.phone }}<br>{% endif %}
+			{% if address.email %}{{ address.email }}<br>{% endif %}
+		</div>
+		{% endwith %}
 	</div>
-	<div>
-		{{ invoice.comments }}
+	<div class="section">
+		<div class="address">
+			<h2>[ Make payment to ]</h2>
+			{% with invoice.shipping_address as address %}
+			<div class="name">
+				{{ address.name }}
+			</div>
+			<div class="company">
+				{{ address.company }}
+			</div>
+			<div class="addr">
+				{{ address.street1 }} <br>
+				
+				{% if address.street2 %}{{ address.street2 }}<br>{% endif %}
+
+				{{ address.city }}, {{ address.province }}, {{ address.postal_code }}<br>
+
+			</div>
+			<div class="contact">
+				{% if address.phone %}{{ address.phone }}<br>{% endif %}
+				{% if address.email %}{{ address.email }}<br>{% endif %}
+			</div>
+			{% endwith %}
+		</div>
 	</div>
+	<div class="section">
+		<h2>[ Total due now ]</h2>
+
+		<h1>${{ invoice.calculate_amount }}</h1>
+	</div>
+
+	<div class="section">
+		<h2>[ Time report detail ]</h2>
+
+		{% for time in invoice.hours.all %}
+			<div class="invoice_hours">
+				<span class="time">
+					{{ time.start_time|date:"M-d-Y" }}
+				</span>
+				<span class="hours">
+					- ({{ time.hours }} hours or {{ time.minutes }} minutes)
+				</span>
+
+				{% if time.comment %}
+				<div class="comment">
+					{{ time.comment }}
+				</div>
+				{% endif %}
+
+			</div>
+		{% endfor %}
+	</div>
+
+
+
 </div>
-
-
-
-
-
-
 </body>
 </html>

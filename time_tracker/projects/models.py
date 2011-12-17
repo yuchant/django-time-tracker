@@ -2,6 +2,9 @@ from django.db import models
 
 # Create your models here.
 
+# [Project <- Time -< Invoices]
+
+# a project should have a Client. A client should have billing info
 
 class Address(models.Model):
     type = models.CharField(max_length=128, default='')
@@ -18,6 +21,11 @@ class Address(models.Model):
     phone = models.CharField(max_length=128, blank=True)
     email = models.EmailField(max_length=128, blank=True)
 
+
+    class Meta:
+        verbose_name = 'Address'
+        verbose_name_plural = 'Addresses'
+
     def __unicode__(self):
         return '{self.type}: {self.name} [{self.company}]'.format(
             self=self,)
@@ -25,24 +33,32 @@ class Address(models.Model):
 
 class Project(models.Model):
     name = models.CharField(max_length=528)
+
     hourly_rate = models.DecimalField(max_digits=12, decimal_places=2)
     
-    default_ship_address = models.ForeignKey(Address, related_name="default_ship_projects")
-    company = models.ForeignKey(Address, related_name="related_projects")
+    default_ship_address = models.ForeignKey(Address, related_name="+", blank=True, null=True)
+    default_bill_company = models.ForeignKey(Address, related_name="+", blank=True, null=True)
+
 
 
 class ProjectHours(models.Model):
     project = models.ForeignKey(Project)
-
+    paid = models.BooleanField(default=False, blank=True)
+    
     start_time = models.DateTimeField()
     end_time = models.DateTimeField(blank=True, null=True)
 
     minutes = models.DecimalField(max_digits=12, decimal_places=4, default=0)
+    
     comment = models.TextField(blank=True)
-    paid = models.BooleanField(default=False, blank=True)
+
+    class Meta:
+        ordering = ['start_time']
+
 
     def __unicode__(self):
         return '{self.start_time} - {self.end_time}'.format(self=self)
+
 
     def save(self, *args, **kwargs):
         if self.start_time and self.end_time:
@@ -50,8 +66,14 @@ class ProjectHours(models.Model):
         super(ProjectHours, self).save(*args, **kwargs)
 
 
+    @property
+    def hours(self):
+        return round(self.minutes/60, 2)
+
+
 class Invoice(models.Model):
     project = models.ForeignKey(Project)
+    date_created = models.DateTimeField(auto_now_add=True)
     paid = models.BooleanField(default=False, blank=True)
     amount = models.DecimalField(decimal_places=2, max_digits=12, default=0)
     hours = models.ManyToManyField(ProjectHours, blank=True, null=True)
@@ -67,10 +89,13 @@ class Invoice(models.Model):
     ]
     payment_type = models.CharField(max_length=256, choices=PAYMENT_TYPE_CHOICES)
 
-    billing_address = models.ForeignKey(Address, blank=True, null=True, related_name="+")
-    shipping_address = models.ForeignKey(Address, blank=True, null=True, related_name="+")
+    billing_address = models.ForeignKey(Address, related_name="+", blank=True, null=True)
+    shipping_address = models.ForeignKey(Address, related_name="+", blank=True, null=True)
+
 
     def calculate_amount(self):
-        return self.hours.aggregate(s=models.Sum('minutes')).get('s', 0)
+        hours = self.hours.aggregate(s=models.Sum('minutes')).get('s', 0) / 60 
+        amount = hours * self.project.hourly_rate
+        return round(amount, 2)
 
 
