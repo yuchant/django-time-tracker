@@ -1,0 +1,6 @@
+*.pyc
+*.html~
+*.swp
+*.DS_Store
+*.sqlite
+env/*
