@@ -1,14 +1,39 @@
-<h1>Template</h1>
+<html>
+<head>
+
+<style>
+	body {
+		font-size:1em;
+	}
+	#address_row {
+		
+	}
+</style>
+</head>
+<body>
 
 
-<div class="row">
+
+<div id="address_row">
 	<div class="address">
-		# get address
+		<h3>Client Information</h3>
+		{{ invoice.billing_address }}
 	</div>
 
 	<div class="address">
-		# get to address
+		<h3>Make Payments To</h3>
+		{{ invoice.shipping_address }}
+
+	</div>
+	<div>
+		{{ invoice.comments }}
 	</div>
 </div>
 
 
+
+
+
+
+</body>
+</html>
